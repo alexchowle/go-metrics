@@ -39,14 +39,14 @@ func NewRegisteredGenericGauge[T constraints.Ordered](name string, r Registry) G
 }
 
 // mimicking `type GaugeSnapshot int64`
-type GenericGaugeSnapshot[T constraints.Ordered] struct{ X T }
+type GenericGaugeSnapshot[T constraints.Ordered] struct{ x T }
 
 func (GenericGaugeSnapshot[T]) Update(T) {
 	panic("Update called on a GenericGaugeSnapshot")
 }
 
 func (g GenericGaugeSnapshot[T]) Value() T {
-	return g.X
+	return g.x
 }
 
 func (g GenericGaugeSnapshot[T]) Snapshot() GenericGauge[T] {
@@ -59,9 +59,7 @@ func (NilGenericGauge[T]) Snapshot() GenericGauge[T] {
 	return NilGenericGauge[T]{}
 }
 
-func (NilGenericGauge[T]) Update(v T) {
-
-}
+func (NilGenericGauge[T]) Update(v T) {}
 
 func (NilGenericGauge[T]) Value() T {
 	var zero T

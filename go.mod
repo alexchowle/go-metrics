@@ -1,6 +1,6 @@
 module github.com/alexchowle/go-metrics
 
-go 1.19
+go 1.18
 
 require (
 	github.com/stathat/go v1.0.0

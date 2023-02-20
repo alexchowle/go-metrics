@@ -1,35 +1,35 @@
 package metrics
 
-import "sync/atomic"
+import (
+	"sync/atomic"
 
-type Number interface {
-	int64 | float64
-}
+	"golang.org/x/exp/constraints"
+)
 
-type GenericGauge[T Number] interface {
+type GenericGauge[T constraints.Ordered] interface {
 	Snapshot() GenericGauge[T]
 	Update(T)
 	Value() T
 }
 
-func GetOrRegisterGenericGauge[T Number](name string, r Registry) GenericGauge[T] {
+func GetOrRegisterGenericGauge[T constraints.Ordered](name string, r Registry) GenericGauge[T] {
 	if r == nil {
 		r = DefaultRegistry
 	}
 	return r.GetOrRegister(name, NewGenericGauge[T]).(GenericGauge[T])
 }
 
-func NewGenericGauge[T Number]() GenericGauge[T] {
+func NewGenericGauge[T constraints.Ordered]() GenericGauge[T] {
 	if UseNilMetrics {
 		return NilGenericGauge[T]{}
 	}
 	v := atomic.Pointer[T]{}
-	var zero T = 0
+	var zero T
 	v.Store(&zero)
 	return &StandardGenericGauge[T]{value: v}
 }
 
-func NewRegisteredGenericGauge[T Number](name string, r Registry) GenericGauge[T] {
+func NewRegisteredGenericGauge[T constraints.Ordered](name string, r Registry) GenericGauge[T] {
 	g := NewGenericGauge[T]()
 	if r == nil {
 		r = DefaultRegistry
@@ -39,7 +39,7 @@ func NewRegisteredGenericGauge[T Number](name string, r Registry) GenericGauge[T
 }
 
 // mimicking `type GaugeSnapshot int64`
-type GenericGaugeSnapshot[T Number] struct{ X T }
+type GenericGaugeSnapshot[T constraints.Ordered] struct{ X T }
 
 func (GenericGaugeSnapshot[T]) Update(T) {
 	panic("Update called on a GenericGaugeSnapshot")
@@ -53,7 +53,7 @@ func (g GenericGaugeSnapshot[T]) Snapshot() GenericGauge[T] {
 	return g
 }
 
-type NilGenericGauge[T Number] struct{}
+type NilGenericGauge[T constraints.Ordered] struct{}
 
 func (NilGenericGauge[T]) Snapshot() GenericGauge[T] {
 	return NilGenericGauge[T]{}
@@ -64,10 +64,11 @@ func (NilGenericGauge[T]) Update(v T) {
 }
 
 func (NilGenericGauge[T]) Value() T {
-	return 0
+	var zero T
+	return zero
 }
 
-type StandardGenericGauge[T Number] struct {
+type StandardGenericGauge[T constraints.Ordered] struct {
 	value atomic.Pointer[T]
 }
 
@@ -83,7 +84,7 @@ func (g *StandardGenericGauge[T]) Snapshot() GenericGauge[T] {
 	return g
 }
 
-type FunctionalGenericGauge[T Number] struct {
+type FunctionalGenericGauge[T constraints.Ordered] struct {
 	value func() T
 }
 
